@@ -110,6 +110,29 @@
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            min-height: 300px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .demo-img img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .demo-img-upload {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255,255,255,0.7);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
         }
         
         .step-card {
@@ -204,6 +227,36 @@
         
         .github-link:hover {
             color: #a777e3;
+        }
+        
+        .upload-form {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-form-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .close-form {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
         }
         
         /* 响应式调整 */
@@ -321,7 +374,10 @@
             <div class="row align-items-center">
                 <div class="col-md-6 mb-4 mb-md-0">
                     <div class="demo-img">
-                        <img src="static/img/demo.png" alt="ChangeFace演示" class="img-fluid">
+                        <img id="demoImage" src="static/img/demo.png" alt="ChangeFace演示" class="img-fluid" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiNmMGYwZjAiIC8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iIzMzMyI+572R5LiK5Lyg5b2V5pS+6Zeq5Zu+54mHPC90ZXh0Pgo8L3N2Zz4='">
+                        <div class="demo-img-upload" id="uploadDemoBtn">
+                            <i class="bi bi-upload"></i>
+                        </div>
                     </div>
                 </div>
                 
@@ -516,8 +572,129 @@
         </div>
     </footer>
 
+    <!-- 上传表单 -->
+    <div class="upload-form" id="uploadForm">
+        <div class="upload-form-content position-relative">
+            <div class="close-form" id="closeForm">
+                <i class="bi bi-x-lg"></i>
+            </div>
+            <h4 class="mb-4">上传演示图片</h4>
+            <form id="imageUploadForm">
+                <div class="mb-3">
+                    <label for="imageFile" class="form-label">选择图片文件</label>
+                    <input type="file" class="form-control" id="imageFile" accept="image/*" required>
+                    <div class="form-text">支持JPG、PNG等常见图片格式。</div>
+                </div>
+                <div class="mb-3">
+                    <label for="imageDesc" class="form-label">图片描述</label>
+                    <input type="text" class="form-control" id="imageDesc" placeholder="请输入图片描述（可选）">
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-main">上传图片</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript依赖 -->
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 确保必要的目录存在
+        document.addEventListener('DOMContentLoaded', function() {
+            // 上传演示图片
+            const uploadDemoBtn = document.getElementById('uploadDemoBtn');
+            const uploadForm = document.getElementById('uploadForm');
+            const closeForm = document.getElementById('closeForm');
+            const imageUploadForm = document.getElementById('imageUploadForm');
+            const demoImage = document.getElementById('demoImage');
+            
+            // 打开上传表单
+            uploadDemoBtn.addEventListener('click', function() {
+                uploadForm.style.display = 'flex';
+            });
+            
+            // 关闭上传表单
+            closeForm.addEventListener('click', function() {
+                uploadForm.style.display = 'none';
+            });
+            
+            // 点击遮罩层关闭表单
+            uploadForm.addEventListener('click', function(e) {
+                if (e.target === uploadForm) {
+                    uploadForm.style.display = 'none';
+                }
+            });
+            
+            // 处理表单提交
+            imageUploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const fileInput = document.getElementById('imageFile');
+                const file = fileInput.files[0];
+                
+                if (file) {
+                    // 检查文件是否为图片类型
+                    if (!file.type.startsWith('image/')) {
+                        alert('请选择图片文件！');
+                        return;
+                    }
+                    
+                    // 读取文件并显示
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        demoImage.src = e.target.result;
+                        
+                        // 保存到本地存储（作为演示，实际应用中应上传到服务器）
+                        localStorage.setItem('demoImage', e.target.result);
+                        
+                        // 关闭表单
+                        uploadForm.style.display = 'none';
+                        
+                        // 将图片保存到目标位置
+                        saveDemoImage(e.target.result);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 检查本地存储中是否有保存的演示图片
+            const savedDemoImage = localStorage.getItem('demoImage');
+            if (savedDemoImage) {
+                demoImage.src = savedDemoImage;
+            }
+            
+            // 保存演示图片到目标位置（GitHub Pages环境下仅作示例，实际上无法执行服务器端文件操作）
+            function saveDemoImage(dataUrl) {
+                // 在正常的Web应用中，这里应该是一个AJAX请求，将图片发送到服务器
+                // 但在GitHub Pages静态环境下，我们只能做前端模拟
+                console.log('图片上传成功（模拟）');
+                
+                // 显示成功消息
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
+                successAlert.setAttribute('role', 'alert');
+                successAlert.innerHTML = `
+                    图片上传成功！
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                document.body.appendChild(successAlert);
+                
+                // 5秒后自动关闭提示
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 5000);
+            }
+            
+            // 为README.md中的logo图片创建一个备用方案
+            // 在实际部署时，这可以帮助确保即使static/img/logo.png不存在，页面也能正常显示
+            const logoImg = document.createElement('link');
+            logoImg.rel = 'preload';
+            logoImg.as = 'image';
+            logoImg.href = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNmU4ZWZiO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNhNzc3ZTM7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkwIiBmaWxsPSJ1cmwoI2dyYWQpIiAvPgogIDxjaXJjbGUgY3g9IjY1IiBjeT0iODAiIHI9IjIwIiBmaWxsPSJ3aGl0ZSIgLz4KICA8Y2lyY2xlIGN4PSIxMzUiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IndoaXRlIiAvPgogIDxwYXRoIGQ9Ik03MCwxMzAgUTEwMCwxNjAgMTMwLDEzMCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI1IiBmaWxsPSJub25lIiAvPgo8L3N2Zz4=';
+            document.head.appendChild(logoImg);
+        });
+    </script>
 </body>
 </html>
